@@ -36,10 +36,13 @@ jobs:
         uses: Jimver/cuda-toolkit@v0.2.5
         with:
           cuda: '11.1.1'
+
+      - name: Tst
         run: |
 #          echo "Installed cuda version is: ${{steps.cuda-toolkit.outputs.cuda}}"
 #          echo "Cuda install location: ${{steps.cuda-toolkit.outputs.CUDA_PATH}}"
            nvcc -V
+
       #      - name: Install CUDA ${{ matrix.cuda-version }}
       #        if: ${{ matrix.cuda-version != 'cpu' }}
       #        run: |
