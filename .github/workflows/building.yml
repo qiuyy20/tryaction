@@ -16,7 +16,7 @@ jobs:
       max-parallel: 20 # max for free user
       fail-fast: false
       matrix:
-        os: [ ubuntu-18.04 ]
+        os: [ self-hosted ]
         python-version: [ 3.8 ]
         torch-version: [ 1.10.0 ]
         cuda-version: [ 'cu111' ]
