@@ -8,15 +8,15 @@ jobs:
     env:
       CUDA_PATH: /usr/local/
       LD_LIBRARY_PATH: ${CUDA_PATH}/lib64:${LD_LIBRARY_PATH}
-      # PATH: ${CUDA_PATH}/bin:${PATH} see https://githubmemory.com/repo/actions/checkout/issues/571
+      # PATH: ${CUDA_PATH}/bin:${PATH} # NO! see https://githubmemory.com/repo/actions/checkout/issues/571
 
     strategy:
       max-parallel: 20 # max for free user
       fail-fast: false
       matrix:
         # os: [ self-hosted ]
-        os: [ ubuntu-18.04 ]
-        python-version: [ 3.8 ]
+        os: [ ubuntu-18.04 self-hosted]
+        python-version: [ 3.7, 3.8 ]
         torch-version: [ 1.10.0 ]
         cuda-version: [ 'cu111' ]
         exclude:
@@ -31,6 +31,17 @@ jobs:
       - name: Proxy info
         run: |
           python -c "import os; print(os.environ.get('http_proxy'),os.environ.get('https_proxy')) "
+
+      - name: Set up Python ${{ matrix.python-version}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set Pip Mirror in Mainland
+        run: |
+          pip install pip -U
+          pip install wheel
+          pip config set global.index-url https://pypi.doubanio.com/simple
 
       - name: CUDA via Jimver
         uses: Jimver/cuda-toolkit@v0.2.5
