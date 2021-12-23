@@ -8,7 +8,7 @@ jobs:
     env:
       CUDA_PATH: /usr/local/
       LD_LIBRARY_PATH: ${CUDA_PATH}/lib64:${LD_LIBRARY_PATH}
-      PATH: ${CUDA_PATH}/bin:${PATH}
+      # PATH: ${CUDA_PATH}/bin:${PATH} see https://githubmemory.com/repo/actions/checkout/issues/571
 
     strategy:
       max-parallel: 20 # max for free user
