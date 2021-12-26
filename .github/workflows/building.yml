@@ -14,11 +14,10 @@ jobs:
       max-parallel: 20 # max for free user
       fail-fast: false
       matrix:
-        # os: [ self-hosted ]
-        os: [ ubuntu-20.04]
-        python-version: [3.8 ]
+        os: [ ubuntu-20.04 ]
+        python-version: [ 3.8 ]
         torch-version: [ 1.10.0 ]
-        cuda-version: [ 'cu111' , 'cu113']
+        cuda-version: [ 'cu111' , 'cu113' ]
         exclude:
           - torch-version: 1.9.0
             cuda-version: 'cu113'
@@ -28,70 +27,75 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Proxy info
-        run: |
-          python -c "import os; print(os.environ.get('http_proxy'),os.environ.get('https_proxy')) "
+      #      - name: Proxy info
+      #        run: |
+      #          python -c "import os; print(os.environ.get('http_proxy'),os.environ.get('https_proxy')) "
+      #
+      #      - name: Set up Python ${{ matrix.python-version}}
+      #        uses: actions/setup-python@v2
+      #        with:
+      #          python-version: ${{ matrix.python-version }}
+      #
+      #      - name: Set Pip Mirror in Mainland
+      #        run: |
+      #          pip install pip -U
+      #          pip install wheel
+      #          pip config set global.index-url https://pypi.doubanio.com/simple
 
-      - name: Set up Python ${{ matrix.python-version}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Set Pip Mirror in Mainland
+      - name: Translate2 cuXY to X.Y.Z, e.g., cu111 to 11.1
+        id: translator2
         run: |
-          pip install pip -U
-          pip install wheel
-          pip config set global.index-url https://pypi.doubanio.com/simple
-
-      - name: Translate cuXY to X.Y.Z, e.g., cu111 to 11.1
-        id : translator
-        run: |
-          echo ::set-output name=arch::\
-                  $(echo '{ "cu111": "11.1" }' | jq -r 'to_entries[] | select(.key=="${{ matrix.cuda-version }}") | .value')
+          echo ::set-output name=full_version::\
+                  $(jq -r '.["${{ matrix.cuda-version }}"]' < .github/workflows/mapping.json)
 
       - name: Test translate
         run: |
-          echo ${{steps.translator.outputs.arch}}
+          echo ${{steps.translator2.outputs.full_version}}
 
       - name: CUDA via Jimver
         uses: Jimver/cuda-toolkit@v0.2.5
         id: cuda-toolkit
         with:
-          cuda: '11.1'
+          cuda: ${{steps.translator2.outputs.full_version}}
 
       - name: Tst
         run: |
           echo "Installed cuda version is: ${{steps.cuda-toolkit.outputs.cuda}}"
           echo "Cuda install location: ${{steps.cuda-toolkit.outputs.CUDA_PATH}}"
           nvcc -V
-#
-#      - name: Install PyTorch ${{ matrix.torch-version }}+${{ matrix.cuda-version }}
-#        run: |
-#          pip install torch==${{ matrix.torch-version}} torchvision -f https://download.pytorch.org/whl/${{ matrix.cuda-version }}/torch_stable.html
-#          python -c "import torch; print('PyTorch:', torch.__version__)"
-#          python -c "import torch; print('CUDA:', torch.version.cuda)"
-#
-#      - name: Install torch-scatter, sparse, and cluster
-#        run: |
-#          pip install torch-scatter -f https://data.pyg.org/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}.html
-#          pip install torch-sparse -f https://data.pyg.org/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}.html
-#          pip install torch-cluster -f https://data.pyg.org/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}.html
-#
-#      - name: Install main package for CPU
-#        if: ${{ matrix.cuda-version == 'cpu' }}
-#        run: |
-#          FORCE_ONLY_CPU=1 pip install -e .
-#        shell:
-#          bash
-#
-#      - name: Install main package for GPU
-#        if: ${{ matrix.cuda-version != 'cpu' }}
-#        run: |
-#          python -c "import os;print(f'\033[1;35m CURRENT WORKING DIR: {os.getcwd()}\033[0m')"
-#          source .github/workflows/cuda/${{ matrix.cuda-version }}-${{ runner.os }}-env.sh
-#          pip install -e .
-#        shell:
-#          bash
+      #
+      #      - name: Install PyTorch ${{ matrix.torch-version }}+${{ matrix.cuda-version }}
+      #        run: |
+      #          pip install torch==${{ matrix.torch-version}} torchvision -f https://download.pytorch.org/whl/${{ matrix.cuda-version }}/torch_stable.html
+      #          python -c "import torch; print('PyTorch:', torch.__version__)"
+      #          python -c "import torch; print('CUDA:', torch.version.cuda)"
+      #
+      #      - name: Install torch-scatter, sparse, and cluster
+      #        run: |
+      #          pip install torch-scatter -f https://data.pyg.org/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}.html
+      #          pip install torch-sparse -f https://data.pyg.org/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}.html
+      #          pip install torch-cluster -f https://data.pyg.org/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}.html
+      #
+      #      - name: Install main package for CPU
+      #        if: ${{ matrix.cuda-version == 'cpu' }}
+      #        run: |
+      #          FORCE_ONLY_CPU=1 pip install -e .
+      #        shell:
+      #          bash
+      #
+      - name: Install main package for GPU
+        if: ${{ matrix.cuda-version != 'cpu' }}
+        run: |
+          python -c "import os;print(f'\033[1;35m CURRENT WORKING DIR: {os.getcwd()}\033[0m')"
+          source .github/workflows/cuda/${{ matrix.cuda-version }}-${{ runner.os }}-env.sh
+
+          echo ${CUDA_HOME}
+          echo ${LD_LIBRARY_PATH}
+          echo ${PATH}
+          echo ${FORCE_CUDA}
+          echo ${TORCH_CUDA_ARCH_LIST}
+        shell:
+          bash
 #
 #      - name: Build wheel
 #        run: |
