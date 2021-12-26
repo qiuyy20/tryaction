@@ -96,6 +96,7 @@ jobs:
           pip install scipy
 
           pip install wheel
+          echo "* [TORCH_CUDA_ARCH_LIST]: ${TORCH_CUDA_ARCH_LIST}"
           python setup.py bdist_wheel --dist-dir=dist
           pip install .
           cd ..
