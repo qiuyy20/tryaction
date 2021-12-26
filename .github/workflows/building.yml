@@ -97,6 +97,7 @@ jobs:
           python setup.py bdist_wheel --dist-dir=dist
           pip install -e .
           cd ..
+          pwd
           python .github/tt.py
 
         shell:
