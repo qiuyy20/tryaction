@@ -85,6 +85,7 @@ jobs:
           echo "* [PATH]: ${PATH}"
           echo "* [FORCE_CUDA]: ${FORCE_CUDA}"
           echo "* [TORCH_CUDA_ARCH_LIST]: ${TORCH_CUDA_ARCH_LIST}"
+
         shell:
           bash
 
@@ -96,7 +97,9 @@ jobs:
           pip install scipy
 
           pip install wheel
-          echo "* [TORCH_CUDA_ARCH_LIST]: ${TORCH_CUDA_ARCH_LIST}"
+          echo ">>>>>>>>> [TORCH_CUDA_ARCH_LIST]: ${TORCH_CUDA_ARCH_LIST}"
+          source .github/workflows/cuda/${{ matrix.cuda-version }}-${{ runner.os }}-env.sh
+          echo ">>>>>>>>>> [TORCH_CUDA_ARCH_LIST]: ${TORCH_CUDA_ARCH_LIST}"
           python setup.py bdist_wheel --dist-dir=dist
           pip install .
           cd ..
