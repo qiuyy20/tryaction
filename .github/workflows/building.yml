@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         # os: [ self-hosted ]
-        os: [ ubuntu-18.04 self-hosted]
+        os: [ ubuntu-18.04]
         python-version: [ 3.7, 3.8 ]
         torch-version: [ 1.10.0 ]
         cuda-version: [ 'cu111' ]
@@ -43,64 +43,74 @@ jobs:
           pip install wheel
           pip config set global.index-url https://pypi.doubanio.com/simple
 
-      - name: CUDA via Jimver
-        uses: Jimver/cuda-toolkit@v0.2.5
-        id: cuda-toolkit
-        with:
-          cuda: '11.1.1'
-
-      - name: Tst
+      - name: Translate cuXY to X.Y.Z, e.g., cu111 to 11.1
+        id : translator
         run: |
-          nvcc -V
+          echo ::set-output name=arch::\
+                  $(echo '{ "cu111": "11.1.1" }' | jq -r 'to_entries[] | select(.key=="${{ matrix.cuda-version }}") | .value')
 
-      - name: Install PyTorch ${{ matrix.torch-version }}+${{ matrix.cuda-version }}
+      - name: Test translate
         run: |
-          pip install torch==${{ matrix.torch-version}} torchvision -f https://download.pytorch.org/whl/${{ matrix.cuda-version }}/torch_stable.html
-          python -c "import torch; print('PyTorch:', torch.__version__)"
-          python -c "import torch; print('CUDA:', torch.version.cuda)"
-
-      - name: Install torch-scatter, sparse, and cluster
-        run: |
-          pip install torch-scatter -f https://data.pyg.org/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}.html
-          pip install torch-sparse -f https://data.pyg.org/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}.html
-          pip install torch-cluster -f https://data.pyg.org/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}.html
-
-      - name: Install main package for CPU
-        if: ${{ matrix.cuda-version == 'cpu' }}
-        run: |
-          FORCE_ONLY_CPU=1 pip install -e .
-        shell:
-          bash
-
-      - name: Install main package for GPU
-        if: ${{ matrix.cuda-version != 'cpu' }}
-        run: |
-          python -c "import os;print(f'\033[1;35m CURRENT WORKING DIR: {os.getcwd()}\033[0m')"
-          source .github/workflows/cuda/${{ matrix.cuda-version }}-${{ runner.os }}-env.sh
-          pip install -e .
-        shell:
-          bash
-
-      - name: Build wheel
-        run: |
-          pip install wheel
-          python setup.py bdist_wheel --dist-dir=dist
-
-      - name: Install AWS Cli
-        uses: unfor19/install-aws-cli-action@v1
-        with:
-          version: 2
-          verbose: false
-
-      - name: Configure AWS
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-east-1
-
-
-      - name: Upload wheel
-        run: |
-          aws s3 sync dist s3://thgsp/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }} --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
-
+          echo ${{steps.translator.outputs.arch}}
+#
+#      - name: CUDA via Jimver
+#        uses: Jimver/cuda-toolkit@v0.2.5
+#        id: cuda-toolkit
+#        with:
+#          cuda: '11.1.1'
+#
+#      - name: Tst
+#        run: |
+#          nvcc -V
+#
+#      - name: Install PyTorch ${{ matrix.torch-version }}+${{ matrix.cuda-version }}
+#        run: |
+#          pip install torch==${{ matrix.torch-version}} torchvision -f https://download.pytorch.org/whl/${{ matrix.cuda-version }}/torch_stable.html
+#          python -c "import torch; print('PyTorch:', torch.__version__)"
+#          python -c "import torch; print('CUDA:', torch.version.cuda)"
+#
+#      - name: Install torch-scatter, sparse, and cluster
+#        run: |
+#          pip install torch-scatter -f https://data.pyg.org/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}.html
+#          pip install torch-sparse -f https://data.pyg.org/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}.html
+#          pip install torch-cluster -f https://data.pyg.org/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }}.html
+#
+#      - name: Install main package for CPU
+#        if: ${{ matrix.cuda-version == 'cpu' }}
+#        run: |
+#          FORCE_ONLY_CPU=1 pip install -e .
+#        shell:
+#          bash
+#
+#      - name: Install main package for GPU
+#        if: ${{ matrix.cuda-version != 'cpu' }}
+#        run: |
+#          python -c "import os;print(f'\033[1;35m CURRENT WORKING DIR: {os.getcwd()}\033[0m')"
+#          source .github/workflows/cuda/${{ matrix.cuda-version }}-${{ runner.os }}-env.sh
+#          pip install -e .
+#        shell:
+#          bash
+#
+#      - name: Build wheel
+#        run: |
+#          pip install wheel
+#          python setup.py bdist_wheel --dist-dir=dist
+#
+#      - name: Install AWS Cli
+#        uses: unfor19/install-aws-cli-action@v1
+#        with:
+#          version: 2
+#          verbose: false
+#
+#      - name: Configure AWS
+#        uses: aws-actions/configure-aws-credentials@v1
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws-region: ap-east-1
+#
+#
+#      - name: Upload wheel
+#        run: |
+#          aws s3 sync dist s3://thgsp/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }} --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
+#
