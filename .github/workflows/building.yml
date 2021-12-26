@@ -11,7 +11,7 @@ jobs:
       matrix:
         os: [ ubuntu-20.04 ]
         python-version: [ 3.8 ]
-        torch-version: [ 1.10.0 ]
+        torch-version: [ 1.8.1 1.9.0 ]
         cuda-version: [ 'cu111' ]
         exclude:
           - torch-version: 1.9.0
@@ -54,7 +54,7 @@ jobs:
           echo "Installed cuda version is: ${{steps.cuda-toolkit.outputs.cuda}}"
           echo "Cuda install location: ${{steps.cuda-toolkit.outputs.CUDA_PATH}}"
           nvcc -V
-      #
+
       - name: Install PyTorch ${{ matrix.torch-version }}+${{ matrix.cuda-version }}
         run: |
           pip install torch==${{ matrix.torch-version}} torchvision -f https://download.pytorch.org/whl/${{ matrix.cuda-version }}/torch_stable.html
@@ -88,31 +88,34 @@ jobs:
         shell:
           bash
 
-      - name: Build torch_cluster
+      - name: Clone and Build torch_cluster
         run: |
-          pip install -v torch_cluster
-          python -c "print()"
-#
-#      - name: Build wheel
-#        run: |
-#          pip install wheel
-#          python setup.py bdist_wheel --dist-dir=dist
-#
-#      - name: Install AWS Cli
-#        uses: unfor19/install-aws-cli-action@v1
-#        with:
-#          version: 2
-#          verbose: false
-#
-#      - name: Configure AWS
-#        uses: aws-actions/configure-aws-credentials@v1
-#        with:
-#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#          aws-region: ap-east-1
-#
-#
-#      - name: Upload wheel
-#        run: |
-#          aws s3 sync dist s3://thgsp/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }} --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
-#
+
+          git clone git@github.com:rusty1s/pytorch_cluster.git
+          cd pytorch_cluster
+          pip install wheel
+          python setup.py bdist_wheel --dist-dir=dist
+          pip install -e .
+          python .github/tt.py
+
+        shell:
+          bash
+
+      - name: Install AWS Cli
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+          version: 2
+          verbose: false
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-east-1
+
+
+      - name: Upload wheel
+        run: |
+          aws s3 sync dist s3://thgsp/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }} --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
+
