@@ -100,7 +100,7 @@ jobs:
           pip install .
           cd ..
           python -c "import os;print(f'\033[1;35m CURRENT WORKING DIR: {os.getcwd()}\033[0m')"
-          python -c "import os;print(f'\033[1;35m CURRENT WORKING DIR: {os.path.listdir()}\033[0m')"
+          python -c "import os;print(f'\033[1;35m CURRENT WORKING DIR: {os.listdir()}\033[0m')"
           python .github/workflows/tt.py
 
         shell:
