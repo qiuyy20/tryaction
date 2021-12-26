@@ -38,10 +38,19 @@ jobs:
       #          pip config set global.index-url https://pypi.doubanio.com/simple
 
       - name: Translate2 cuXY to X.Y.Z, e.g., cu111 to 11.1
+        if: ${{ runner.os == 'Linux' }}
         id: translator2
         run: |
           echo ::set-output name=full_version::\
                   $(jq -r '.["${{ matrix.cuda-version }}"]' < .github/workflows/mapping.json)
+
+      - name: Translate2 cuXY to X.Y.Z, e.g., cu111 to 11.1
+        if: ${{ runner.os == 'Windows' }}
+        id: translator2
+        run: |
+          echo ::set-output name=full_version::\
+                  $(jq -r '.["${{ matrix.cuda-version }}"]' < .github/workflows/mapping.json)
+
 
       - name: Test translate
         run: |
