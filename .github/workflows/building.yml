@@ -9,7 +9,7 @@ jobs:
       max-parallel: 20 # max for free user
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04,  windows-latest ]
+        os: [ ubuntu-20.04 ]
         python-version: [ 3.8 ]
         torch-version: [ 1.10.0 ]
         cuda-version: [ 'cu111' ]
@@ -91,6 +91,7 @@ jobs:
       - name: Build torch_cluster
         run: |
           pip install -v torch_cluster
+          python -c "print()"
 #
 #      - name: Build wheel
 #        run: |
