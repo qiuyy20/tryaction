@@ -5,19 +5,14 @@ on: [ push ]
 jobs:
   wheel:
     runs-on: ${{ matrix.os }}
-    env:
-      CUDA_PATH: /usr/local/
-      LD_LIBRARY_PATH: ${CUDA_PATH}/lib64:${LD_LIBRARY_PATH}
-      # PATH: ${CUDA_PATH}/bin:${PATH} # NO! see https://githubmemory.com/repo/actions/checkout/issues/571
-
     strategy:
       max-parallel: 20 # max for free user
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-20.04,  windows-latest ]
         python-version: [ 3.8 ]
         torch-version: [ 1.10.0 ]
-        cuda-version: [ 'cu111' , 'cu113' ]
+        cuda-version: [ 'cu111' ]
         exclude:
           - torch-version: 1.9.0
             cuda-version: 'cu113'
@@ -96,6 +91,10 @@ jobs:
           echo "* [TORCH_CUDA_ARCH_LIST]: ${TORCH_CUDA_ARCH_LIST}"
         shell:
           bash
+
+      - name: Build torch_cluster
+        run: |
+          pip install -v torch_cluster
 #
 #      - name: Build wheel
 #        run: |
