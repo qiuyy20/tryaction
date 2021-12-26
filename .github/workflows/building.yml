@@ -85,6 +85,7 @@ jobs:
           echo "* [PATH]: ${PATH}"
           echo "* [FORCE_CUDA]: ${FORCE_CUDA}"
           echo "* [TORCH_CUDA_ARCH_LIST]: ${TORCH_CUDA_ARCH_LIST}"
+
         shell:
           bash
 
@@ -96,7 +97,9 @@ jobs:
           pip install scipy
 
           pip install wheel
-          echo "* [TORCH_CUDA_ARCH_LIST]: ${TORCH_CUDA_ARCH_LIST}"
+          echo ">>>>>>>>> [TORCH_CUDA_ARCH_LIST]: ${TORCH_CUDA_ARCH_LIST}"
+          source .github/workflows/cuda/${{ matrix.cuda-version }}-${{ runner.os }}-env.sh
+          echo ">>>>>>>>>> [TORCH_CUDA_ARCH_LIST]: ${TORCH_CUDA_ARCH_LIST}"
           python setup.py bdist_wheel --dist-dir=dist
           pip install .
           cd ..
@@ -107,21 +110,27 @@ jobs:
         shell:
           bash
 
-      - name: Install AWS Cli
-        uses: unfor19/install-aws-cli-action@v1
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          version: 2
-          verbose: false
-
-      - name: Configure AWS
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-east-1
-
-
-      - name: Upload wheel
-        run: |
-          aws s3 sync dist s3://thgsp/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }} --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
+          files: pytorch_cluster/dist/
+#
+#      - name: Install AWS Cli
+#        uses: unfor19/install-aws-cli-action@v1
+#        with:
+#          version: 2
+#          verbose: false
+#
+#      - name: Configure AWS
+#        uses: aws-actions/configure-aws-credentials@v1
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws-region: ap-east-1
+#
+#
+#      - name: Upload wheel
+#        run: |
+#          aws s3 sync dist s3://thgsp/whl/torch-${{ matrix.torch-version }}+${{ matrix.cuda-version }} --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
 
