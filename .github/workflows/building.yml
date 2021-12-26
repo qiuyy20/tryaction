@@ -98,8 +98,9 @@ jobs:
           pip install wheel
           python setup.py bdist_wheel --dist-dir=dist
           pip install .
-
+          cd ..
           python -c "import os;print(f'\033[1;35m CURRENT WORKING DIR: {os.getcwd()}\033[0m')"
+          python -c "import os;print(f'\033[1;35m CURRENT WORKING DIR: {os.path.listdir()}\033[0m')"
           python .github/workflows/tt.py
 
         shell:
