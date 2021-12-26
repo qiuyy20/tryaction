@@ -90,14 +90,16 @@ jobs:
 
       - name: Clone and Build torch_cluster
         run: |
-
+          python -c "import os;print(f'\033[1;35m CURRENT WORKING DIR: {os.getcwd()}\033[0m')"
           git clone https://github.com/rusty1s/pytorch_cluster.git
           cd pytorch_cluster
           pip install wheel
           python setup.py bdist_wheel --dist-dir=dist
           pip install -e .
+          ls
           cd ..
-          pwd
+          ls
+          python -c "import os;print(f'\033[1;35m CURRENT WORKING DIR: {os.getcwd()}\033[0m')"
           python .github/tt.py
 
         shell:
