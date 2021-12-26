@@ -93,12 +93,12 @@ jobs:
           python -c "import os;print(f'\033[1;35m CURRENT WORKING DIR: {os.getcwd()}\033[0m')"
           git clone https://github.com/rusty1s/pytorch_cluster.git
           cd pytorch_cluster
+          pip install scipy
+
           pip install wheel
           python setup.py bdist_wheel --dist-dir=dist
-          pip install -e .
-          ls
-          cd ..
-          ls
+          pip install .
+
           python -c "import os;print(f'\033[1;35m CURRENT WORKING DIR: {os.getcwd()}\033[0m')"
           python .github/workflows/tt.py
 
